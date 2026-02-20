@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kurir - Tugas</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<style>
+body{
+  font-family:'Nunito',sans-serif;
+  margin:0;
+  background:#f8f8f8;
+  -webkit-tap-highlight-color: transparent;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select:none;
+  -webkit-user-select:none;
+  outline:none;
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#FB923C;
+  padding:16px;
+}
+
+.header img{
+  width:100%;
+  max-height:150px;
+  object-fit:cover;
+  border-radius:12px;
+}
+
+/* TABS */
+.tabs{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  margin:16px 0;
+}
+
+.tab{
+  padding:8px 16px;
+  background:#fff;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:700;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  transition:0.2s;
+}
+
+.tab.active{
+  background:#FB923C;
+  color:#fff;
+}
+
+.tab:hover{
+  transform: translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* LIST ORDERS */
+.orders-container{
+  padding:16px;
+}
+
+.order-card{
+  display:flex;
+  align-items:center;
+  background:#fff;
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+  gap:12px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.order-card:hover{
+  transform: translateY(-2px);
+  box-shadow:0 6px 15px rgba(0,0,0,0.15);
+}
+
+.order-card img{
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+.order-info{
+  display:flex;
+  flex-direction:column;
+}
+
+.order-info .layanan{
+  font-size:16px;
+  font-weight:700;
+}
+
+.order-info .beliDi{
+  font-size:12px;
+  color:#555;
+}
+
+/* Animasi kosong */
+.empty-orders{
+  display:none;
+  text-align:center;
+  margin-top:50px;
+  font-weight:700;
+  color:#555;
+  font-size:18px;
+  position: relative;
+}
+
+.empty-orders::after{
+  content:"";
+  display:block;
+  width:8px;
+  height:8px;
+  background:#FB923C;
+  border-radius:50%;
+  position:absolute;
+  top:50%;
+  left:50%;
+  margin-left:-4px;
+  margin-top:20px;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse{
+  0%{transform: translateX(-50%) scale(1);}
+  50%{transform: translateX(-50%) scale(2);}
+  100%{transform: translateX(-50%) scale(1);}
+}
+
+/* POPUP STRUK */
+.popup-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.popup-card{
+  width: 320px;
+  max-width: 90%;
+  background: #fff;
+  border-radius: 18px;
+  padding: 16px 14px;
+  font-family: 'Nunito', monospace;
+  font-size: 13px;
+  color: #000;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  animation: popIn 0.25s ease;
+}
+
+@keyframes popIn{
+  from{transform: scale(0.95); opacity:0;}
+  to{transform: scale(1); opacity:1;}
+}
+
+/* HEADER STRUK */
+.receipt-header{
+  text-align: center;
+  border-bottom: 1px dashed #000;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.receipt-logo{
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  margin-bottom: 4px;
+}
+
+.receipt-title{
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.receipt-sub{
+  font-size: 11px;
+  color: #555;
+}
+
+/* GARIS DASH */
+.dash{
+  border-top: 1px dashed #000;
+  margin: 10px 0;
+}
+
+/* ROW LABEL-VALUE */
+.row{
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+}
+
+.label{
+  font-weight: 600;
+}
+
+.value{
+  font-weight: 500;
+  text-align: right;
+}
+
+/* BADGE STATUS */
+.status-badge{
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-proses{ background: #FB923C; color: #fff; }
+.badge-selesai{ background: #10B981; color: #fff; }
+.badge-gagal{ background: #EF4444; color: #fff; }
+
+/* FOOTER STRUK */
+.receipt-footer{
+  text-align: center;
+  font-size: 11px;
+  color: #555;
+  margin-top: 8px;
+}
+
+/* TOMBOL TUTUP / ANTARKAN */
+.btn-close{
+  margin-top: 12px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #FB923C;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-close:hover{
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* TAMPILKAN POPUP */
+.popup-overlay.show{
+  display: flex;
+}
+/* tombol selesai */
+.order-card .btn-selesai{
+  margin-left:auto;
+  padding:6px 12px;
+  background:#10B981;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  transition:0.2s;
+}
+
+.order-card .btn-selesai:hover{
+  opacity:0.9;
+  transform: translateY(-1px);
+}
+/* Loading popup */
+#loadingPopup .popup-card{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:16px;
+  padding:20px;
+}
+/* popup konfirmasi */
+#confirmPopup .popup-card{
+  max-width:280px;
+  text-align:center;
+  padding:16px;
+}
+
+#confirmPopup .btn-close{
+  flex:1;
+  padding:8px 12px;
+  border:none;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+#confirmPopup #confirmCancel{
+  background:#9CA3AF; /* abu-abu */
+  color:#fff;
+}
+
+#confirmPopup #confirmOk{
+  background:#10B981; /* hijau */
+  color:#fff;
+}
+
+#confirmPopup .btn-close:hover{
+  opacity:0.9;
+  transform: translateY(-1px);
+}
+.order-card .btn-chat{
+  margin-left:8px;
+  padding:6px 12px;
+  background:#3B82F6;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  transition:0.2s;
+}
+
+.order-card .btn-chat:hover{
+  opacity:0.9;
+  transform: translateY(-1px);
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img id="headerFoto" src="default.png" alt="Header">
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="aktif">Tugas Aktif</div>
+  <div class="tab" data-tab="selesai">Tugas Selesai</div>
+</div>
+
+<div class="orders-container" id="ordersContainer"></div>
+<div class="empty-orders" id="emptyOrders">Tugas kosong...</div>
+
+<!-- POPUP DETAIL ORDER STRUK -->
+<div class="popup-overlay" id="orderPopup">
+  <div class="popup-card">
+    <div id="popupContent"></div>
+    <button class="btn-close" id="btnClosePopup">Tutup</button>
+  </div>
+</div>
+<!-- POPUP KONFIRMASI -->
+<div class="popup-overlay" id="confirmPopup">
+  <div class="popup-card">
+    <h3>Konfirmasi</h3>
+    <p id="confirmText">Apakah tugas ini sudah selesai?</p>
+    <div style="display:flex; justify-content:space-between; gap:8px; margin-top:12px;">
+      <button class="btn-close" id="confirmCancel">Batal</button>
+      <button class="btn-close" id="confirmOk">Oke</button>
+    </div>
+  </div>
+</div>
+<!-- LOADING POPUP -->
+<div class="popup-overlay" id="loadingPopup">
+  <div class="popup-card">
+    <h3 id="loadingText">Sedang memproses...</h3>
+  </div>
+</div>
+
+<script>
+// Firebase config
+firebase.initializeApp({
+  apiKey: "AIzaSyByQl0BXZoSMzrULUNA6l7UVFQjXmvsdJE",
+  authDomain: "suruhbeli-e8ae8.firebaseapp.com",
+  projectId: "suruhbeli-e8ae8"
+});
+
+const db = firebase.firestore();
+const auth = firebase.auth();
+let currentUser = null;
+let currentTab = "aktif";
+
+// ===== LOGIN CEK =====
+auth.onAuthStateChanged(user=>{
+  if(user){
+    currentUser = user;
+    loadHeaderFoto();
+    loadOrders(currentTab);
+  } else {
+    window.location.href = "login.html";
+  }
+});
+
+// ===== LOAD HEADER FOTO =====
+async function loadHeaderFoto(){
+  try{
+    const doc = await db.collection("stockfoto").doc("headerhomekurir").get();
+    if(doc.exists && doc.data().headerhomekurir){
+      document.getElementById("headerFoto").src = doc.data().headerhomekurir;
+    }
+  } catch(e){console.error(e);}
+}
+
+// ===== LOAD ORDERS =====
+async function loadOrders(tab){
+  const ordersContainer = document.getElementById("ordersContainer");
+  const emptyOrders = document.getElementById("emptyOrders");
+  ordersContainer.innerHTML = "";
+
+  let statusFilter = tab === "aktif" ? "Diproses" : "Selesai";
+
+  try{
+    const snapshot = await db.collection("orders")
+      .where("kurir","==",currentUser.uid)
+      .where("status","==",statusFilter)
+      .get();
+
+    if(snapshot.empty){
+      ordersContainer.style.display = "none";
+      emptyOrders.style.display = "block";
+    } else {
+      ordersContainer.style.display = "block";
+      emptyOrders.style.display = "none";
+
+      snapshot.forEach(doc=>{
+        const data = doc.data();
+      
+        const card = document.createElement("div");
+        card.classList.add("order-card");
+      
+        const img = document.createElement("img");
+        img.src = "https://i.pravatar.cc/50?u=" + doc.id;
+      
+        const info = document.createElement("div");
+        info.classList.add("order-info");
+      
+        const layanan = document.createElement("div");
+        layanan.classList.add("layanan");
+        layanan.innerText = data.layanan || "-";
+      
+        const beliDi = document.createElement("div");
+        beliDi.classList.add("beliDi");
+        beliDi.innerText = data.beliDi || "-";
+      
+        info.appendChild(layanan);
+        info.appendChild(beliDi);
+        card.appendChild(img);
+        card.appendChild(info);
+
+        // ===== TOMBOL SELESAI =====
+        if(currentTab === "aktif"){
+          const btnSelesai = document.createElement("button");
+          btnSelesai.classList.add("btn-selesai");
+          btnSelesai.innerText = "Selesai";
+          btnSelesai.addEventListener("click", async e=>{
+            e.stopPropagation();
+            const confirmPopup = document.getElementById("confirmPopup");
+            const confirmOk = document.getElementById("confirmOk");
+            const confirmCancel = document.getElementById("confirmCancel");
+            const confirmText = document.getElementById("confirmText");
+
+            confirmText.innerText = "Tugas ini akan diselesaikan. Lanjutkan?";
+            confirmPopup.classList.add("show");
+
+            confirmCancel.onclick = ()=> confirmPopup.classList.remove("show");
+
+            confirmOk.onclick = async ()=>{
+              confirmPopup.classList.remove("show");
+              const loading = document.getElementById("loadingPopup");
+              const loadingText = document.getElementById("loadingText");
+              loadingText.innerText = "Sedang memperbarui...";
+              loading.classList.add("show");
+
+              try{
+                await db.collection("orders").doc(doc.id).update({
+                  status: "Selesai",
+                  createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                loadingText.innerText = "Tugas berhasil diselesaikan!";
+                setTimeout(()=>{
+                  loading.classList.remove("show");
+                  loadOrders(currentTab);
+                },1000);
+              } catch(err){
+                loading.classList.remove("show");
+                alert("Gagal menyelesaikan tugas!");
+                console.error(err);
+              }
+            };
+          });
+          card.appendChild(btnSelesai);
+
+          // ===== TOMBOL CHAT =====
+          const btnChat = document.createElement("button");
+          btnChat.classList.add("btn-selesai");
+          btnChat.style.background="#3B82F6";
+          btnChat.style.marginLeft="8px";
+          btnChat.innerText="Chat";
+
+        btnChat.addEventListener("click", async e=>{
+          e.stopPropagation();
+          const loading = document.getElementById("loadingPopup");
+          const loadingText = document.getElementById("loadingText");
+          loadingText.innerText = "Mengecek chat room...";
+          loading.classList.add("show");
+        
+          try{
+            // ===== CEK CHAT ROOM YANG SUDAH ADA =====
+            const existingRoomQuery = await db.collection("chatRooms")
+              .where(`participants.${currentUser.uid}`, "==", true)
+              .where(`participants.${data.userId}`, "==", true)
+              .limit(1)
+              .get();
+        
+            let roomRef;
+        
+            if(!existingRoomQuery.empty){
+              // Ada room, pakai room yang sudah ada
+              roomRef = existingRoomQuery.docs[0].ref;
+              loadingText.innerText = "Chat room sudah ada!";
+            } else {
+              // Tidak ada room, buat baru
+              roomRef = await db.collection("chatRooms").add({
+                participants: {
+                  [currentUser.uid]: true,
+                  [data.userId]: true
+                },
+                orderId: doc.id,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              loadingText.innerText = "Chat room berhasil dibuat!";
+            }
+        
+            // Redirect ke halaman chat
+            setTimeout(()=>{
+              loading.classList.remove("show");
+              window.location.href = `chat.html?roomId=${roomRef.id}`;
+            }, 1000);
+        
+          } catch(err){
+            loading.classList.remove("show");
+            alert("Gagal membuka chat room!");
+            console.error(err);
+          }
+        });
+          card.appendChild(btnChat);
+        }
+
+        // ===== POPUP DETAIL ORDER =====
+        card.addEventListener("click", ()=>{
+          const popup = document.getElementById("orderPopup");
+          const popupContent = document.getElementById("popupContent");
+          const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+
+          popupContent.innerHTML = `
+            <div class="receipt-header">
+              <img src="logo.png" class="receipt-logo">
+              <div class="receipt-title">SuruhBeli</div>
+              <div class="receipt-sub">Struk Pesanan Digital</div>
+            </div>
+            <div class="row">
+              <span class="label">ID Pesanan</span>
+              <span class="value">#${doc.id.slice(0,6)}</span>
+            </div>
+            <div class="row">
+              <span class="label">Waktu</span>
+              <span class="value">${createdAt.toLocaleString("id-ID")}</span>
+            </div>
+            <div class="dash"></div>
+            <div class="row">
+              <span class="label">Layanan</span>
+              <span class="value">${data.layanan || '-'}</span>
+            </div>
+            <div class="row">
+              <span class="label">Pesanan</span>
+              <span class="value">${data.pesanan || '-'}</span>
+            </div>
+            <div class="row">
+              <span class="label">Beli di</span>
+              <span class="value">${data.beliDi || '-'}</span>
+            </div>
+            <div class="row">
+              <span class="label">Catatan</span>
+              <span class="value">${data.catatan || '-'}</span>
+            </div>
+            <div class="dash"></div>
+            <div class="row">
+              <span class="label">Ongkir</span>
+              <span class="value">Rp ${data.ongkir?.toLocaleString('id-ID') || '0'}</span>
+            </div>
+            <div class="row">
+              <span class="label">Status</span>
+              <span class="value">${getStatusBadge(data.status)}</span>
+            </div>
+            <div class="dash"></div>
+            <div class="receipt-footer">
+              Terima kasih telah menggunakan SuruhBeli
+            </div>
+          `;
+        
+          popup.classList.add("show");
+          const btn = document.getElementById("btnClosePopup");
+          if(currentTab==="aktif"){
+            btn.innerText="Antarkan";
+            btn.onclick = ()=>{
+              if(data.lat && data.lng){
+                const url = `https://www.google.com/maps/search/?api=1&query=${data.lat},${data.lng}`;
+                window.open(url,"_blank");
+              } else {
+                alert("Lokasi tidak tersedia!");
+              }
+            }
+          } else {
+            btn.innerText="Tutup";
+            btn.onclick = ()=> popup.classList.remove("show");
+          }
+        });
+      
+        ordersContainer.appendChild(card);
+      });
+    }
+  } catch(e){console.error(e);}
+}
+
+// === Badge status pada popup ===
+function getStatusBadge(status){
+  if(status === "Diproses") return `<span class="status-badge badge-proses">${status}</span>`;
+  if(status === "Selesai") return `<span class="status-badge badge-selesai">${status}</span>`;
+  if(status === "Gagal") return `<span class="status-badge badge-gagal">${status}</span>`;
+  return status || '-';
+}
+
+// ===== POPUP CLOSE CLICK OUTSIDE =====
+document.getElementById("orderPopup").addEventListener("click", e=>{
+  if(e.target.id==="orderPopup"){
+    document.getElementById("orderPopup").classList.remove("show");
+  }
+});
+
+// ===== TAB SWITCH =====
+document.querySelectorAll(".tab").forEach(tabEl=>{
+  tabEl.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    tabEl.classList.add("active");
+    currentTab = tabEl.getAttribute("data-tab");
+    loadOrders(currentTab);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Room</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.css">
+<style>
+:root{
+  --primary-color:#FB923C;
+  --secondary-color:#fff;
+  --partner-bg:#E5E7EB;
+  --user-bg:#FB923C;
+  --user-color:#fff;
+  --partner-color:#000;
+}
+
+body{
+  font-family:'Nunito',sans-serif;
+  margin:0;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  background:#f8f8f8;
+  overflow:hidden;
+}
+
+.header{
+  padding:16px;
+  background:var(--primary-color);
+  color:var(--secondary-color);
+  font-weight:700;
+  text-align:center;
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:10;
+  box-shadow:0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-status{
+  font-weight:400;
+  font-size:12px;
+  margin-top:4px;
+}
+
+.chat-container{
+  flex:1;
+  overflow-y:auto;
+  padding:80px 12px 80px 12px; /* top & bottom untuk header & input */
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.emoji-picker {
+  z-index: 9999 !important;
+}
+.message{
+  padding:8px 12px;
+  border-radius:12px;
+  max-width:70%;
+  word-wrap:break-word;
+  position:relative;
+  font-size:14px;
+}
+
+.message.user{
+  align-self:flex-end;
+  background:var(--user-bg);
+  color:var(--user-color);
+}
+
+.message.partner{
+  align-self:flex-start;
+  background:var(--partner-bg);
+  color:var(--partner-color);
+}
+
+.message div {
+  white-space: pre-wrap;
+}
+
+.timestamp{
+  font-size:10px;
+  color:#555;
+  margin-top:2px;
+  text-align:right;
+}
+
+.input-container{
+  display:flex;
+  padding:8px;
+  background:#fff;
+  box-shadow:0 -2px 4px rgba(0,0,0,0.1);
+  align-items:flex-end;
+  gap:8px;
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  z-index:10;
+}
+
+.input-container textarea{
+  flex:1;
+  padding:10px 12px;
+  border:1px solid #ccc;
+  border-radius:24px;
+  outline:none;
+  font-size:14px;
+  resize:none;
+  max-height:120px; /* input bisa melebar, tapi max tinggi */
+  overflow-y:auto;
+}
+
+.input-container button{
+  padding:10px 16px;
+  border:none;
+  border-radius:24px;
+  background:var(--primary-color);
+  color:var(--secondary-color);
+  font-weight:700;
+  cursor:pointer;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.emoji-btn{
+  background:transparent;
+  border:none;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.online-dot{width:8px;height:8px;background:#10B981;border-radius:50%;display:inline-block;margin-right:4px;}
+.offline-dot{width:8px;height:8px;background:#9CA3AF;border-radius:50%;display:inline-block;margin-right:4px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div id="headerName">Chat Room</div>
+  <div class="header-status" id="headerStatus"></div>
+</div>
+
+<div class="chat-container" id="chatContainer"></div>
+
+<div class="input-container">
+  <button class="emoji-btn" id="emojiBtn">😊</button>
+  <textarea id="messageInput" placeholder="Tulis pesan..." rows="1"></textarea>
+  <button id="sendBtn">Kirim</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.js"></script>
+
+<script>
+// ===== Firebase Config =====
+firebase.initializeApp({
+  apiKey: "AIzaSyByQl0BXZoSMzrULUNA6l7UVFQjXmvsdJE",
+  authDomain: "suruhbeli-e8ae8.firebaseapp.com",
+  projectId: "suruhbeli-e8ae8",
+  databaseURL: "https://suruhbeli-e8ae8-default-rtdb.firebaseio.com"
+});
+
+const db = firebase.firestore();
+const auth = firebase.auth();
+const rtdb = firebase.database();
+let currentUser = null;
+const urlParams = new URLSearchParams(window.location.search);
+const roomId = urlParams.get('roomId');
+if(!roomId){
+  alert("Room ID tidak ditemukan!");
+  window.location.href = "tugas.html";
+}
+
+// ===== LOGIN CEK =====
+auth.onAuthStateChanged(user=>{
+  if(user){
+    currentUser = user;
+    loadChatRoomInfo();
+    loadMessages();
+    updateOnlineStatus(true);
+    window.addEventListener("beforeunload", ()=> updateOnlineStatus(false));
+  } else {
+    window.location.href = "login.html";
+  }
+});
+
+// ===== ONLINE STATUS =====
+function updateOnlineStatus(isOnline){
+  if(!currentUser) return;
+  rtdb.ref("status/" + currentUser.uid).set({
+    online: isOnline,
+    lastSeen: firebase.database.ServerValue.TIMESTAMP
+  });
+}
+
+// ===== CHAT ROOM INFO =====
+async function loadChatRoomInfo(){
+  try{
+    const roomDoc = await db.collection("chatRooms").doc(roomId).get();
+    if(!roomDoc.exists) return;
+
+    const roomData = roomDoc.data();
+    const otherUserId = Object.keys(roomData.participants).find(uid => uid !== currentUser.uid);
+    
+    const userDoc = await db.collection("users").doc(otherUserId).get();
+    const userData = userDoc.exists ? userDoc.data() : {name:"User"};
+
+    const headerName = document.getElementById("headerName");
+    const headerStatus = document.getElementById("headerStatus");
+    headerName.innerText = userData.name;
+
+    rtdb.ref("status/" + otherUserId).on("value", snap=>{
+      const data = snap.val();
+      if(data && data.online){
+        headerStatus.innerHTML = `<span class="online-dot"></span>Online`;
+      } else if(data){
+        const last = new Date(data.lastSeen).toLocaleTimeString("id-ID",{hour:'2-digit',minute:'2-digit'});
+        headerStatus.innerHTML = `<span class="offline-dot"></span>Terakhir dilihat ${last}`;
+      } else {
+        headerStatus.innerHTML = `<span class="offline-dot"></span>Offline`;
+      }
+    });
+
+  } catch(err){ console.error(err); }
+}
+
+// ===== LOAD MESSAGES =====
+function loadMessages(){
+  const chatContainer = document.getElementById("chatContainer");
+  db.collection("chatRooms").doc(roomId)
+    .collection("messages")
+    .orderBy("createdAt")
+    .onSnapshot(snapshot=>{
+      chatContainer.innerHTML = "";
+      snapshot.forEach(doc=>{
+        const data = doc.data();
+        const msgEl = document.createElement("div");
+        msgEl.classList.add("message");
+        msgEl.classList.add(data.senderId===currentUser.uid ? "user" : "partner");
+        msgEl.innerHTML = `<div>${data.text.replace(/\n/g,'<br>')}</div>
+        <div class="timestamp">${data.createdAt?.toDate().toLocaleTimeString("id-ID",{hour:'2-digit',minute:'2-digit'}) || ''}</div>`;
+        chatContainer.appendChild(msgEl);
+      });
+      chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+    });
+}
+
+// ===== KIRIM PESAN =====
+const input = document.getElementById("messageInput");
+document.getElementById("sendBtn").addEventListener("click", sendMessage);
+input.addEventListener("keydown", e => {
+  if(e.key === "Enter" && !e.ctrlKey){
+    // Enter biasa → bikin baris baru
+    // biarkan default, jadi auto tambah \n
+  } else if(e.key === "Enter" && e.ctrlKey){
+    e.preventDefault(); // Ctrl+Enter → kirim pesan
+    sendMessage();
+  }
+});
+
+// ===== SEND MESSAGE FUNCTION =====
+function sendMessage(){
+  const text = input.value.trim();
+  if(!text) return;
+  db.collection("chatRooms").doc(roomId)
+    .collection("messages").add({
+      senderId: currentUser.uid,
+      text: text,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  input.value="";
+  input.style.height="auto";
+}
+
+// ===== AUTO RESIZE TEXTAREA =====
+input.addEventListener('input', ()=>{
+  input.style.height='auto';
+  input.style.height = input.scrollHeight+'px';
+});
+
+// ===== EMOJI PICKER =====
+const picker = new EmojiButton({
+  position: 'top-start',  // posisi picker
+  zIndex: 9999            // pastikan di atas
+});
+
+// Tombol emoji
+document.getElementById('emojiBtn').addEventListener('click', () => {
+  picker.togglePicker(document.getElementById('emojiBtn'));
+});
+
+// Saat pilih emoji
+picker.on('emoji', emoji => {
+  // tambahkan emoji ke textarea
+  input.value += emoji;
+  input.focus();
+
+  // trigger input event supaya auto resize jalan
+  input.dispatchEvent(new Event('input'));
+});
+</script>
+</body>
+</html>
