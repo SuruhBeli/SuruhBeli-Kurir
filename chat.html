@@ -2,164 +2,769 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FB923C">
+  <link rel="icon" href="ikon-512.png">
 <title>Chat Room</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.css">
-<style>
-:root{
-  --primary-color:#FB923C;
-  --secondary-color:#fff;
-  --partner-bg:#E5E7EB;
-  --user-bg:#FB923C;
-  --user-color:#fff;
-  --partner-color:#000;
+<style>  
+:root {  
+  --primary-color: #FB923C;  
+  --secondary-color: #fff;  
+  --partner-bg: #E5E7EB;  
+  --user-bg: #FB923C;  
+  --user-color: #fff;  
+  --partner-color: #000;  
+}  
+  
+body {  
+  font-family: 'Helvetica', 'Arial', sans-serif; /* default font mirip WhatsApp */  
+  margin: 0;  
+  height: 100vh;  
+  display: flex;  
+  flex-direction: column;  
+  background: #f8f8f8;  
+  overflow: hidden;  
+  -webkit-tap-highlight-color: transparent;  
+  user-select: none;  
+}  
+  
+/* HEADER */  
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--primary-color);
+  color: var(--secondary-color);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-body{
-  font-family:'Nunito',sans-serif;
-  margin:0;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  background:#f8f8f8;
-  overflow:hidden;
+.back-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
 }
 
-.header{
-  padding:16px;
-  background:var(--primary-color);
-  color:var(--secondary-color);
-  font-weight:700;
-  text-align:center;
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  z-index:10;
-  box-shadow:0 2px 4px rgba(0,0,0,0.1);
+.partner-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
 }
 
-.header-status{
-  font-weight:400;
-  font-size:12px;
-  margin-top:4px;
+.partner-photo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #E5E7EB;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: uppercase;
 }
 
-.chat-container{
-  flex:1;
-  overflow-y:auto;
-  padding:80px 12px 80px 12px; /* top & bottom untuk header & input */
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+.partner-name {
+  font-weight: 600;
+  font-size: 16px;
 }
-.emoji-picker {
-  z-index: 9999 !important;
-}
-.message{
-  padding:8px 12px;
-  border-radius:12px;
-  max-width:70%;
-  word-wrap:break-word;
-  position:relative;
-  font-size:14px;
-}
-
-.message.user{
-  align-self:flex-end;
-  background:var(--user-bg);
-  color:var(--user-color);
-}
-
-.message.partner{
-  align-self:flex-start;
-  background:var(--partner-bg);
-  color:var(--partner-color);
-}
-
-.message div {
-  white-space: pre-wrap;
-}
-
-.timestamp{
-  font-size:10px;
-  color:#555;
-  margin-top:2px;
-  text-align:right;
-}
-
-.input-container{
-  display:flex;
-  padding:8px;
-  background:#fff;
-  box-shadow:0 -2px 4px rgba(0,0,0,0.1);
-  align-items:flex-end;
-  gap:8px;
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  z-index:10;
-}
-
-.input-container textarea{
-  flex:1;
-  padding:10px 12px;
-  border:1px solid #ccc;
-  border-radius:24px;
-  outline:none;
-  font-size:14px;
-  resize:none;
-  max-height:120px; /* input bisa melebar, tapi max tinggi */
-  overflow-y:auto;
-}
-
-.input-container button{
-  padding:10px 16px;
-  border:none;
-  border-radius:24px;
-  background:var(--primary-color);
-  color:var(--secondary-color);
-  font-weight:700;
-  cursor:pointer;
-  font-size:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  
+.header-status {  
+  font-weight: 400;  
+  font-size: 12px;  
+  margin-top: 4px;  
+}  
+  
+/* CHAT CONTAINER */  
+.chat-container {  
+  flex: 1;  
+  overflow-y: auto;  
+  padding: 80px 12px 80px 12px; /* header + input */  
+  display: flex;  
+  flex-direction: column;  
+  gap: 6px;
+}  
+/* ===== MESSAGE ROW (FULL WIDTH SWIPE AREA) ===== */  
+.message-row {  
+  width: 100%;  
+  display: flex;  
+  position: relative;  
+  touch-action: pan-y; /* biar scroll tetap smooth */  
+}  
+  
+.message-row.user {  
+  justify-content: flex-end;  
+}  
+  
+.message-row.partner {  
+  justify-content: flex-start;  
+}  
+/* MESSAGE */  
+.message {  
+  padding: 5px 10px;  
+  border-radius: 12px;  
+  max-width: 70%;  
+  word-wrap: break-word;  
+  position: relative;  
+  font-family: 'Helvetica', 'Arial', sans-serif;  
+  font-size: 16px;
+}  
+  
+.message.user {  
+  align-self: flex-end;  
+  background: var(--user-bg);  
+  color: var(--user-color);  
+}  
+  
+.message.partner {  
+  align-self: flex-start;  
+  background: var(--partner-bg);  
+  color: var(--partner-color);  
+}  
+/* ===== REPLY BUBBLE (QUOTED MESSAGE STYLE) ===== */
+.reply-bubble {
+  position: relative;
+  font-size: 13px;
+  line-height: 1.3;
+  margin-bottom: 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: block;
+  max-width: 100%;
+  word-wrap: break-word;
 }
 
-.emoji-btn{
-  background:transparent;
-  border:none;
-  font-size:20px;
-  cursor:pointer;
+/* Garis pembatas kiri (ciri khas reply) */
+.reply-bubble::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 3px;
+  background: #FB923C;
+  opacity: 0.9;
 }
 
-.online-dot{width:8px;height:8px;background:#10B981;border-radius:50%;display:inline-block;margin-right:4px;}
-.offline-dot{width:8px;height:8px;background:#9CA3AF;border-radius:50%;display:inline-block;margin-right:4px;}
+/* Reply di bubble USER (orange) */
+.message.user .reply-bubble {
+  background: rgba(255, 255, 255, 0.18); /* kontras di orange */
+  color: rgba(255, 255, 255, 0.95);
+  padding-left: 10px; /* kasih ruang untuk garis kiri */
+}
+
+/* Reply di bubble PARTNER (abu) */
+.message.partner .reply-bubble {
+  background: rgba(0, 0, 0, 0.05);
+  color: #374151;
+  padding-left: 10px;
+}
+
+/* Nama / label reply (opsional kalau ada) */
+.reply-author {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  opacity: 0.85;
+}
+
+/* Teks reply */
+.reply-text-inline {
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 100%;
+}
+
+/* Isi pesan utama setelah reply */
+.message-text {
+  display: inline;
+  line-height: 1.4;
+}
+.reply-bubble:active {
+  opacity: 0.85;
+}
+/* ===== STATE SELECT (MULTI SELECT MODE) ===== */  
+.message.selected {  
+  position: relative;  
+  transform: scale(0.98);  
+  transition: all 0.15s ease;  
+}  
+  
+/* Bubble user saat di-select */  
+.message.user.selected {  
+  background: #C2410C; /* oranye lebih soft */  
+  box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.4);  
+}  
+  
+/* Bubble lawan chat saat di-select */  
+.message.partner.selected {  
+  background: #e5e7eb;  
+  box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.3);  
+}  
+  
+/* Efek overlay transparan (biar kerasa WA banget) */  
+.message.selected::after {  
+  content: "";  
+  position: absolute;  
+  inset: 0;  
+  background: rgba(251, 146, 60, 0.15);  
+  border-radius: inherit;  
+  pointer-events: none;  
+}  
+  
+/* Optional: getaran visual saat dipilih */  
+.message.selected {  
+  animation: selectPop 0.15s ease;  
+}  
+  
+@keyframes selectPop {  
+  0% { transform: scale(1); }  
+  50% { transform: scale(0.96); }  
+  100% { transform: scale(0.98); }  
+}  
+.message.selected::before {  
+  content: "✓";  
+  position: absolute;  
+  top: -6px;  
+  right: -6px;  
+  width: 20px;  
+  height: 20px;  
+  background: #FB923C;  
+  color: white;  
+  font-size: 12px;  
+  font-weight: bold;  
+  border-radius: 50%;  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+}  
+/* ===== DELETED MESSAGE WRAPPER ===== */  
+.deleted-msg {  
+  display: flex;  
+  align-items: center;  
+  gap: 6px;  
+  font-style: italic;  
+  font-size: 13px;  
+  color: #6B7280;  
+  user-select: none;
+}  
+  
+/* ===== SVG IKON DIHAPUS (DIPISAH KHUSUS) ===== */  
+.deleted-icon {  
+  width: 16px;  
+  height: 16px;  
+  stroke: currentColor;   /* ikut warna teks */  
+  stroke-width: 1.8;  
+  flex-shrink: 0;  
+  opacity: 0.9;  
+}  
+  
+/* Efek redup seperti WhatsApp */  
+.message.deleted {  
+  opacity: 0.75;  
+}  
+  
+/* Kalau bubble user (orange) biar tetap kontras */  
+.message.user.deleted .deleted-msg {  
+  color: rgba(255, 255, 255, 0.85);  
+}  
+  
+/* Optional: kalau partner bubble */  
+.message.partner.deleted .deleted-msg {  
+  color: #6B7280;  
+} 
+/* ===== OVERLAY BACKGROUND ===== */
+.delete-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeInOverlay 0.18s ease;
+}
+
+/* ===== POPUP BOX (ORANGE TRANSPARENT) ===== */
+.delete-popup {
+  width: 90%;
+  max-width: 340px;
+  background: var(--user-bg); /* Orange transparan */
+  border-radius: 16px;
+  padding: 14px 16px;
+  animation: scaleInPopup 0.18s ease;
+  font-family: 'Helvetica', 'Arial', sans-serif;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ===== HEADER (TITLE LEFT - ACTION RIGHT) ===== */
+.delete-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* TITLE - KIRI ATAS KECIL */
+.delete-title {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  color: #ffffff;
+  line-height: 1.3;
+  flex: 1;
+}
+
+/* ===== ACTION BUTTONS (KANAN, TANPA BACKGROUND) ===== */
+.delete-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+/* BUTTON BASE - TEXT ONLY */
+.delete-btn {
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s ease;
+  text-align: right;
+}
+
+/* HAPUS UNTUK SAYA */
+.delete-me {
+  color: #ffffff;
+  opacity: 0.95;
+}
+.delete-me:active {
+  transform: scale(0.95);
+  opacity: 0.7;
+}
+
+/* HAPUS UNTUK SEMUA */
+.delete-everyone {
+  color: #7f1d1d; /* merah gelap biar kontras di orange */
+}
+.delete-everyone:active {
+  transform: scale(0.95);
+  opacity: 0.7;
+}
+
+/* BATAL */
+.delete-cancel {
+  color: #ffffff;
+  opacity: 0.8;
+}
+.delete-cancel:active {
+  transform: scale(0.95);
+  opacity: 0.6;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleInPopup {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ===== FADE DELETE ANIMATION (WA STYLE) ===== */
+.message.deleting {
+  animation: fadeDelete 0.2s ease forwards;
+}
+
+@keyframes fadeDelete {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.97); }
+  100% { opacity: 0; transform: scale(0.95); }
+}
+/* WAKTU */  
+.timestamp {
+  font-size: 12px;
+  color: #555;
+  margin-top: 2px;
+  margin-left: 26px; /* 🔥 jarak antara teks dan timestamp */
+  display: inline-block; /* biar sejajar dengan teks */
+  float: right; /* posisi ke kanan dalam bubble */
+  font-family: 'Helvetica', 'Arial', sans-serif;
+}
+/* Warna timestamp beda sesuai bubble */
+.message.user .timestamp {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.message.partner .timestamp {
+  color: rgba(0, 0, 0, 0.55);
+}
+/* INPUT CONTAINER */  
+.input-container {  
+  display: flex;  
+  padding: 8px;  
+  background: #fff;  
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.1);  
+  align-items: flex-end;  
+  gap: 8px;  
+  position: fixed;  
+  bottom: 0;  
+  left: 0;  
+  right: 0;  
+  z-index: 15;  
+}  
+  
+/* TEXTAREA */  
+.input-container textarea {  
+  flex: 1;  
+  padding: 10px 12px;  
+  border: 1px solid #ccc;  
+  border-radius: 20px;  
+  outline: none;  
+  font-size: 17px;  
+  font-family: 'Helvetica', 'Arial', sans-serif;  
+  resize: none;  
+  max-height: 100px;  
+  overflow-y: auto;  
+}  
+  
+/* PLACEHOLDER */  
+.input-container textarea::placeholder {  
+  font-family: 'Helvetica', 'Arial', sans-serif;  
+  color: #999;  
+  opacity: 1;  
+}  
+  
+/* BUTTON UMUM */  
+.input-container button {  
+  padding: 10px 16px;  
+  border: none;  
+  border-radius: 24px;  
+  background: var(--primary-color);  
+  color: var(--secondary-color);  
+  font-weight: 700;  
+  cursor: pointer;  
+  font-size: 14px;  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+}  
+  
+/* EMOJI BUTTON KHUSUS */  
+.input-container .emoji-btn {  
+  background: transparent !important;  
+  border: none !important;  
+  cursor: pointer;  
+  padding: 0px 8px 8px;  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+  border-radius: 50%;  
+  transition: background 0.2s, transform 0.1s;  
+}  
+  
+.input-container .emoji-btn:hover {  
+  background: rgba(251,146,60,0.1);  
+}  
+  
+.input-container .emoji-btn:active {  
+  transform: scale(0.9);  
+}  
+  
+.input-container .emoji-btn svg {  
+  width: 24px;  
+  height: 24px;  
+  stroke: #FB923C;  
+}  
+  
+/* EMOJI POPUP */  
+#emojiPopup {  
+  position: fixed;  
+  bottom: 60px;  
+  left: 8px;  
+  width: 300px;  
+  max-height: 200px;  
+  overflow-y: auto;  
+  background: #fff;  
+  border: 1px solid #ccc;  
+  border-radius: 12px;  
+  padding: 8px;  
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);  
+  z-index: 9999;  
+  flex-wrap: wrap;  
+  gap: 6px;  
+  display: flex;  
+  
+  /* Default hidden */  
+  transform: scale(0);  
+  opacity: 0;  
+  pointer-events: none; /* 🔥 penting */  
+  transform-origin: bottom left;  
+  transition: transform 0.2s ease, opacity 0.2s ease;  
+}  
+  
+#emojiPopup.show {  
+  transform: scale(1);  
+  opacity: 1;  
+  pointer-events: auto; /* aktif saat muncul */  
+}  
+  
+/* POPUP ACTION BAR untuk multi-select */  
+.selection-popup {  
+  position: fixed;  
+  top: 0;  
+  left: 0;  
+  right: 0;  
+  height: 50px;  
+  background: var(--user-bg);  
+  display: flex;  
+  align-items: center;  
+  justify-content: space-between;  
+  padding: 0 12px;  
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);  
+  z-index: 50;  
+  gap: 8px;  
+  transform: translateY(-100%);  
+  transition: transform 0.2s ease;  
+}  
+  
+.selection-popup.show {  
+  transform: translateY(0);  
+}  
+  
+.selection-popup button {  
+  width: 36px;  
+  height: 36px;  
+  border-radius: 50%;  
+  border: none;  
+  background: #fff;  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+  cursor: pointer;  
+  transition: transform 0.1s;  
+}  
+  
+.selection-popup button:hover {  
+  transform: scale(1.1);  
+}  
+  
+.selection-popup button svg {  
+  width: 25px;  
+  height: 25px;  
+  stroke: #FB923C;  
+  stroke-width: 2;  
+}  
+/* ===== REPLY POPUP (WHATSAPP STYLE) ===== */  
+.reply-popup {  
+  position: fixed;  
+  pointer-events: auto;  
+  left: 0;  
+  right: 0;  
+  bottom: 0; /* akan di-offset via JS */  
+  background: #fff7ed;  
+  border-top: 2px solid #FB923C;  
+  padding: 8px 12px;  
+  transform: translateY(100%);  
+  transition: transform 0.2s ease, bottom 0.2s ease;  
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.1);  
+}  
+  
+.reply-popup.show {  
+  transform: translateY(0);  
+}  
+  
+.reply-content {  
+  display: flex;  
+  align-items: center;  
+  justify-content: space-between;  
+  gap: 8px;  
+}  
+  
+.reply-text {  
+  font-size: 16px;  
+  color: #FB923C;  
+  font-style: italic;  
+  overflow: hidden;  
+  text-overflow: ellipsis;  
+  white-space: nowrap;  
+  max-width: 85%;  
+  border-left: 3px solid #FB923C;  
+  padding-left: 8px;  
+}  
+  
+.reply-cancel {  
+  background: transparent;  
+  border: none;  
+  cursor: pointer;  
+  padding: 4px;  
+  border-radius: 50%;  
+}  
+  
+.reply-cancel:active {  
+  transform: scale(0.9);  
+}
+/* ===== SWIPE REPLY ICON (WA STYLE) ===== */  
+.swipe-reply-icon {  
+  position: absolute;  
+  left: -36px;  
+  top: 50%;  
+  transform: translateY(-50%) scale(0.5);  
+  opacity: 0;  
+  transition: transform 0.15s ease, opacity 0.15s ease;  
+  pointer-events: none;  
+}  
+  
+.message.swiping .swipe-reply-icon {  
+  opacity: 1;  
+  transform: translateY(-50%) scale(1);  
+}  
+  
+.swipe-reply-icon svg {  
+  width: 22px;  
+  height: 22px;  
+  stroke: #FB923C;  
+  stroke-width: 2;  
+}
+
+/* ===== FLOATING SCROLL TO BOTTOM BUTTON ===== */
+.scroll-bottom-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 90px; /* tepat di atas tombol kirim */
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(251, 146, 60, 0.9); /* orange transparan */
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 999;
+  opacity: 0;
+  transform: translateY(20px) scale(0.9);
+  pointer-events: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* Saat muncul */
+.scroll-bottom-btn.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Animasi klik */
+.scroll-bottom-btn:active {
+  transform: scale(0.92);
+}
+/* ONLINE / OFFLINE DOT */  
+.online-dot { width: 8px; height: 8px; background: #10B981; border-radius: 50%; display: inline-block; margin-right: 4px; }  
+.offline-dot { width: 8px; height: 8px; background: #9CA3AF; border-radius: 50%; display: inline-block; margin-right: 4px; }  
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div id="headerName">Chat Room</div>
+  <button id="backBtn" class="back-btn">
+    <!-- SVG panah kiri -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 19l-7-7 7-7"/>
+    </svg>
+  </button>
+
+  <div class="partner-info">
+    <div class="partner-photo" id="partnerPhoto">U</div>
+    <div class="partner-name" id="headerName">Users</div>
+  </div>
+
   <div class="header-status" id="headerStatus"></div>
 </div>
 
 <div class="chat-container" id="chatContainer"></div>
-
+<!-- REPLY POPUP (WA STYLE) -->
+<div id="replyPopup" class="reply-popup">
+  <div class="reply-content">
+    <div class="reply-text" id="replyText"></div>
+    <button id="cancelReplyBtn" class="reply-cancel">
+      <!-- X Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#FB923C" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+</div>
 <div class="input-container">
-  <button class="emoji-btn" id="emojiBtn">😊</button>
+  <button class="emoji-btn" id="emojiBtn" aria-label="Emoji">
+    <!-- SVG Smile Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#FB923C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-smile">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+      <line x1="9" y1="9" x2="9.01" y2="9"></line>
+      <line x1="15" y1="9" x2="15.01" y2="9"></line>
+    </svg>
+  </button>
   <textarea id="messageInput" placeholder="Tulis pesan..." rows="1"></textarea>
   <button id="sendBtn">Kirim</button>
 </div>
+<!-- FLOATING SCROLL TO BOTTOM -->
+<button id="scrollToBottomBtn" class="scroll-bottom-btn">
+  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24">
+    <path d="M12 5v14M12 19l-5-5M12 19l5-5"
+      stroke="white"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"/>
+  </svg>
+</button>
+<!-- EMOJI POPUP -->
+<div id="emojiPopup"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.js"></script>
 
 <script>
 // ===== Firebase Config =====
@@ -204,82 +809,765 @@ function updateOnlineStatus(isOnline){
 }
 
 // ===== CHAT ROOM INFO =====
-async function loadChatRoomInfo(){
-  try{
+async function loadChatRoomInfo() {
+  try {
     const roomDoc = await db.collection("chatRooms").doc(roomId).get();
-    if(!roomDoc.exists) return;
+    if (!roomDoc.exists) return;
 
     const roomData = roomDoc.data();
-    const otherUserId = Object.keys(roomData.participants).find(uid => uid !== currentUser.uid);
-    
-    const userDoc = await db.collection("users").doc(otherUserId).get();
-    const userData = userDoc.exists ? userDoc.data() : {name:"User"};
+    const otherUserId = Object.keys(roomData.participants || {}).find(uid => uid !== currentUser.uid);
+    if (!otherUserId) return;
 
-    const headerName = document.getElementById("headerName");
+    // ===== 1. Ambil dari cache dulu =====
+    let cachedPartner = localStorage.getItem("partner_" + otherUserId);
+    let userName, initials;
+
+    if (cachedPartner) {
+      cachedPartner = JSON.parse(cachedPartner);
+      userName = cachedPartner.nama;
+      initials = cachedPartner.initials;
+    } else {
+      // Tampilkan placeholder instan
+      userName = "User";
+      initials = "U";
+    }
+
+    // ===== 2. Render instan =====
+    document.getElementById("headerName").innerText = userName;
+    document.getElementById("partnerPhoto").innerText = initials;
+
+    // ===== 3. Ambil data terbaru dari Firestore secara async =====
+    (async () => {
+      let userDoc = await db.collection("users").doc(otherUserId).get();
+      if (!userDoc.exists) {
+        userDoc = await db.collection("kurir").doc(otherUserId).get();
+      }
+
+      const userDataRaw = userDoc.exists ? userDoc.data() : {};
+      const latestName = userDataRaw.nama || userDataRaw.name || "User";
+      const latestInitials = latestName
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
+
+      // Update UI & cache jika berubah
+      if(latestName !== userName){
+        userName = latestName;
+        initials = latestInitials;
+
+        document.getElementById("headerName").innerText = userName;
+        document.getElementById("partnerPhoto").innerText = initials;
+
+        // Simpan ke cache
+        localStorage.setItem("partner_" + otherUserId, JSON.stringify({
+          nama: userName,
+          initials: initials
+        }));
+      }
+    })();
+
+    // ===== 4. Update online status realtime =====
     const headerStatus = document.getElementById("headerStatus");
-    headerName.innerText = userData.name;
-
-    rtdb.ref("status/" + otherUserId).on("value", snap=>{
-      const data = snap.val();
-      if(data && data.online){
-        headerStatus.innerHTML = `<span class="online-dot"></span>Online`;
-      } else if(data){
-        const last = new Date(data.lastSeen).toLocaleTimeString("id-ID",{hour:'2-digit',minute:'2-digit'});
-        headerStatus.innerHTML = `<span class="offline-dot"></span>Terakhir dilihat ${last}`;
-      } else {
-        headerStatus.innerHTML = `<span class="offline-dot"></span>Offline`;
+    rtdb.ref("status/" + otherUserId).on("value", snapshot => {
+      const status = snapshot.val();
+      if(status){
+        headerStatus.innerHTML = status.online 
+          ? '<span class="online-dot"></span>Online' 
+          : '<span class="offline-dot"></span>Offline';
       }
     });
 
-  } catch(err){ console.error(err); }
+  } catch (err) {
+    console.error("Gagal load chat room info:", err);
+  }
 }
+document.getElementById("backBtn").addEventListener("click", ()=>{
+  window.location.href = "chatlist.html";
+});
 
 // ===== LOAD MESSAGES =====
-function loadMessages(){
-  const chatContainer = document.getElementById("chatContainer");
-  db.collection("chatRooms").doc(roomId)
-    .collection("messages")
-    .orderBy("createdAt")
-    .onSnapshot(snapshot=>{
-      chatContainer.innerHTML = "";
-      snapshot.forEach(doc=>{
-        const data = doc.data();
-        const msgEl = document.createElement("div");
-        msgEl.classList.add("message");
-        msgEl.classList.add(data.senderId===currentUser.uid ? "user" : "partner");
-        msgEl.innerHTML = `<div>${data.text.replace(/\n/g,'<br>')}</div>
-        <div class="timestamp">${data.createdAt?.toDate().toLocaleTimeString("id-ID",{hour:'2-digit',minute:'2-digit'}) || ''}</div>`;
-        chatContainer.appendChild(msgEl);
-      });
-      chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
-    });
+let longPressTimer;
+let selectedMessages = new Set();
+let actionBar = null;
+// ===== UPDATE COUNTER (WA STYLE) =====
+function updateSelectionCount(){
+  if(!actionBar) return;
+
+  const countEl = document.getElementById("selectionCount");
+  if(!countEl) return;
+
+  const count = selectedMessages.size;
+  countEl.textContent = count;
+
+  // Auto vibrate kecil biar kerasa UX premium
+  if(navigator.vibrate && count > 0){
+    navigator.vibrate(5);
+  }
 }
+// ===== REPLY STATE =====
+let replyState = {
+  active: false,
+  messageId: null,
+  text: ""
+};
+
+const replyPopup = document.getElementById("replyPopup");
+const replyTextEl = document.getElementById("replyText");
+const cancelReplyBtn = document.getElementById("cancelReplyBtn");
+
+function showReplyPopup(text, msgId){
+  replyState.active = true;
+  replyState.messageId = msgId;
+  replyState.text = text;
+
+  replyTextEl.innerText = text;
+
+  // 🔥 update posisi sebelum tampil
+  updateReplyPopupPosition();
+
+  replyPopup.classList.add("show");
+}
+
+function cancelReply(){
+  replyState.active = false;
+  replyState.messageId = null;
+  replyState.text = "";
+  replyPopup.classList.remove("show");
+}
+
+cancelReplyBtn.addEventListener("click", cancelReply);
+function showSelectionPopup() {
+  // Kalau sudah ada → hanya update counter
+  if(actionBar){
+    updateSelectionCount();
+    return;
+  }
+
+  actionBar = document.createElement('div');
+  actionBar.classList.add('selection-popup');
+
+  // ===== LEFT SIDE (BACK + COUNT) =====
+  const leftDiv = document.createElement('div');
+  leftDiv.style.display = 'flex';
+  leftDiv.style.alignItems = 'center';
+  leftDiv.style.gap = '8px';
+
+  // Tombol batalkan ⬅️
+  const cancelBtn = document.createElement('button');
+  cancelBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#FB923C">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>`;
+  cancelBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    clearSelection();
+  });
+
+  // 🔥 COUNTER ANGKA (WA STYLE)
+  const countText = document.createElement('span');
+  countText.id = "selectionCount";
+  countText.style.fontWeight = '600';
+  countText.style.fontSize = '16px';
+  countText.style.color = '#333';
+  countText.textContent = selectedMessages.size;
+
+  leftDiv.appendChild(cancelBtn);
+  leftDiv.appendChild(countText);
+
+  // ===== RIGHT SIDE (COPY + DELETE) =====
+  const rightDiv = document.createElement('div');
+  rightDiv.style.display = 'flex';
+  rightDiv.style.gap = '8px';
+
+  // Tombol salin 📋
+  const copyBtn = document.createElement('button');
+  copyBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#FB923C">
+      <rect x="9" y="9" width="13" height="13" rx="2"/>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </svg>`;
+  copyBtn.addEventListener('click', e=>{
+    e.stopPropagation();
+    const texts = Array.from(selectedMessages)
+      .filter(msgEl => !msgEl.classList.contains('deleted'))
+      .map(msgEl => msgEl.dataset.text || '')
+      .join('\n');
+
+    if(texts){
+      navigator.clipboard.writeText(texts);
+      if(navigator.vibrate) navigator.vibrate(10);
+    }
+
+    clearSelection();
+  });
+
+  // Tombol hapus 🗑 (FINAL WA SYSTEM)
+  const delBtn = document.createElement('button');
+  delBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#FB923C">
+      <path d="M3 6h18M9 6v12m6-12v12M5 6l1 14h12l1-14"/>
+    </svg>`;
+  delBtn.addEventListener('click', e=>{
+    e.stopPropagation();
+    showDeleteOptions(); // 🔥 sekarang pakai popup pilihan WA
+  });
+
+  rightDiv.appendChild(copyBtn);
+  rightDiv.appendChild(delBtn);
+
+  actionBar.appendChild(leftDiv);
+  actionBar.appendChild(rightDiv);
+  document.body.appendChild(actionBar);
+
+  // tampilkan animasi
+  requestAnimationFrame(()=> actionBar.classList.add('show'));
+
+  // update jumlah pertama
+  updateSelectionCount();
+}
+
+// update clearSelection
+function clearSelection() {
+  selectedMessages.forEach(msgEl => msgEl.classList.remove('selected'));
+  selectedMessages.clear();
+  if(actionBar){
+    actionBar.classList.remove('show');
+    setTimeout(()=> { actionBar.remove(); actionBar=null; }, 200);
+  }
+}
+// ===== DELETE OPTIONS MODAL (CENTER + CLICK OUTSIDE CLOSE) =====
+function showDeleteOptions(){
+  if(selectedMessages.size === 0) return;
+
+  // Cek apakah ada pesan orang lain (biar tombol everyone hilang)
+  let hasOtherUserMsg = false;
+  selectedMessages.forEach(msgEl=>{
+    if(msgEl.dataset.senderId !== currentUser.uid){
+      hasOtherUserMsg = true;
+    }
+  });
+
+  // Overlay (background gelap)
+  const overlay = document.createElement("div");
+  overlay.className = "delete-overlay";
+
+  // Popup box (tengah layar)
+  const popup = document.createElement("div");
+  popup.className = "delete-popup";
+
+  // Hitung jumlah pesan yang dipilih
+  const selectedCount = selectedMessages.size;
+  
+  // Format teks (1 pesan / 2 pesan / 10 pesan)
+  const titleText = selectedCount === 1 
+    ? `Hapus ${selectedCount} pesan?`
+    : `Hapus ${selectedCount} pesan?`;
+  
+  popup.innerHTML = `
+    <div class="delete-header">
+      <div class="delete-title">Hapus ${selectedMessages.size} pesan?</div>
+  
+      <div class="delete-actions">
+        <button class="delete-btn delete-me" id="deleteMeBtn">
+          Hapus untuk saya
+        </button>
+  
+        ${hasOtherUserMsg ? "" : `
+        <button class="delete-btn delete-everyone" id="deleteEveryoneBtn">
+          Hapus untuk semua
+        </button>
+        `}
+  
+        <button class="delete-btn delete-cancel" id="cancelDeleteBtn">
+          Batal
+        </button>
+      </div>
+    </div>
+  `;
+
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+
+  // ===== CLICK OUTSIDE = CLOSE (UX MODERN) =====
+  overlay.addEventListener("click", (e)=>{
+    if(e.target === overlay){
+      closeDeletePopup(overlay);
+    }
+  });
+
+  // Prevent klik dalam popup agar tidak close
+  popup.addEventListener("click", (e)=>{
+    e.stopPropagation();
+  });
+
+  // Tombol batal
+  document.getElementById("cancelDeleteBtn").onclick = ()=>{
+    closeDeletePopup(overlay);
+  };
+
+  // Delete for me
+  document.getElementById("deleteMeBtn").onclick = ()=>{
+    deleteForMe();
+    closeDeletePopup(overlay);
+  };
+
+  // Delete for everyone (jika ada)
+  const delEveryoneBtn = document.getElementById("deleteEveryoneBtn");
+  if(delEveryoneBtn){
+    delEveryoneBtn.onclick = ()=>{
+      deleteForEveryone();
+      closeDeletePopup(overlay);
+    };
+  }
+}
+
+// ===== SMOOTH CLOSE POPUP =====
+function closeDeletePopup(overlay){
+  overlay.style.opacity = "0";
+  overlay.style.transition = "0.15s ease";
+  setTimeout(()=>{
+    overlay.remove();
+  },150);
+}
+
+// ===== DELETE FOR ME (HILANG DI DEVICE SENDIRI SAJA) =====
+function deleteForMe(){
+  selectedMessages.forEach(msgEl=>{
+    const msgId = msgEl.dataset.id;
+
+    // animasi fade
+    msgEl.classList.add("deleting");
+
+    setTimeout(()=>{
+      msgEl.remove();
+    },200);
+
+    // simpan flag di firestore
+    db.collection("chatRooms")
+      .doc(roomId)
+      .collection("messages")
+      .doc(msgId)
+      .update({
+        [`deletedFor.${currentUser.uid}`]: true
+      });
+  });
+
+  if(navigator.vibrate) navigator.vibrate(10);
+  clearSelection();
+}
+
+// ===== DELETE FOR EVERYONE (SEPERTI WHATSAPP) =====
+function deleteForEveryone(){
+  selectedMessages.forEach(msgEl=>{
+    // BLOCK kalau bukan pesan sendiri
+    if(msgEl.dataset.senderId !== currentUser.uid){
+      if(navigator.vibrate) navigator.vibrate([20,50,20]);
+      return;
+    }
+
+    const msgId = msgEl.dataset.id;
+
+    // animasi fade WA
+    msgEl.classList.add("deleting");
+
+    setTimeout(()=>{
+      msgEl.classList.remove("deleting");
+      msgEl.classList.add("deleted");
+    },180);
+
+    // update database global
+    db.collection("chatRooms")
+      .doc(roomId)
+      .collection("messages")
+      .doc(msgId)
+      .update({
+        deleted: true,
+        deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        deletedBy: currentUser.uid
+      });
+  });
+
+  if(navigator.vibrate) navigator.vibrate([10,30,10]);
+  clearSelection();
+}
+
+// ===== CANCEL SELECTION HANYA JIKA KLIK AREA LUAR CHAT =====
+document.addEventListener('click', e=>{
+  if(selectedMessages.size === 0) return;
+
+  const clickedMessage = e.target.closest('.message');
+  const clickedActionBar = e.target.closest('.selection-popup');
+
+  // Jika klik bubble lain → JANGAN batal (biar bisa multi select)
+  if(clickedMessage) return;
+
+  // Jika klik action bar → JANGAN batal
+  if(clickedActionBar) return;
+
+  // Baru batal kalau klik area kosong
+  clearSelection();
+});
+
+// modifikasi toggle bubble click
+function enableLongPressSelection() {
+  document.querySelectorAll('.message-row').forEach(rowEl => {
+    if (rowEl.dataset.listener === "true") return;
+    rowEl.dataset.listener = "true";
+
+    const msgEl = rowEl.querySelector('.message');
+    if(!msgEl) return;
+
+    // ===== AMBIL TEXT UNTUK COPY & REPLY =====
+    const divs = msgEl.querySelectorAll('div');
+    let messageText = "";
+
+    if(divs.length >= 3){
+      messageText = divs[divs.length - 2].innerText;
+    } else if(divs.length === 2){
+      messageText = divs[0].innerText;
+    }
+    msgEl.dataset.text = messageText;
+
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let isSwiping = false;
+    let moved = false;
+    let longPressTriggered = false;
+    let touchStarted = false;
+
+    const MAX_SWIPE = 120;
+    const REPLY_THRESHOLD = 60;
+    const LONG_PRESS_DELAY = 400;
+
+    // ===== TOGGLE SELECT (CORE) =====
+    const toggleSelect = () => {
+      longPressTriggered = true;
+
+      const isSelected = msgEl.classList.toggle('selected');
+      if(isSelected){
+        selectedMessages.add(msgEl);
+      }else{
+        selectedMessages.delete(msgEl);
+      }
+
+      if(selectedMessages.size > 0){
+        showSelectionPopup();
+        updateSelectionCount();
+      }else{
+        clearSelection();
+      }
+
+      if(navigator.vibrate) navigator.vibrate(8);
+    };
+
+    // ===== TAP SAAT SUDAH MODE SELECT (INI YANG FIX BUBBLE KEDUA) =====
+    msgEl.addEventListener('click', (e) => {
+      if(selectedMessages.size > 0 && !isSwiping){
+        e.stopPropagation();
+        toggleSelect();
+      }
+    });
+
+    // ===== TOUCH START =====
+    rowEl.addEventListener('touchstart', e => {
+      touchStarted = true;
+      const touch = e.touches[0];
+
+      startX = touch.clientX;
+      startY = touch.clientY;
+      currentX = startX;
+      moved = false;
+      isSwiping = false;
+      longPressTriggered = false;
+
+      // Long press SELALU aktif (meski sudah select)
+      longPressTimer = setTimeout(() => {
+        if(!moved && touchStarted){
+          toggleSelect();
+        }
+      }, LONG_PRESS_DELAY);
+
+    }, {passive:true});
+
+    // ===== TOUCH MOVE (SWIPE REPLY TETAP AKTIF WALAU SELECT MODE) =====
+    rowEl.addEventListener('touchmove', e => {
+      if(!touchStarted) return;
+
+      const touch = e.touches[0];
+      currentX = touch.clientX;
+      const currentY = touch.clientY;
+
+      const diffX = currentX - startX;
+      const diffY = Math.abs(currentY - startY);
+
+      // Jika scroll vertikal → batal long press
+      if(diffY > 30){
+        clearTimeout(longPressTimer);
+        return;
+      }
+
+      // Swipe kanan = reply (TIDAK diblok walau ada selection)
+      if(diffX > 10){
+        moved = true;
+        isSwiping = true;
+        clearTimeout(longPressTimer);
+
+        const drag = Math.min(diffX, MAX_SWIPE);
+        msgEl.style.transform = `translateX(${drag}px)`;
+        msgEl.classList.add("swiping");
+      }
+
+    }, {passive:true});
+
+    // ===== TOUCH END =====
+    rowEl.addEventListener('touchend', () => {
+      touchStarted = false;
+      clearTimeout(longPressTimer);
+
+      const diffX = currentX - startX;
+
+      // Reset posisi swipe animasi
+      msgEl.style.transition = "transform 0.2s ease";
+      msgEl.style.transform = "translateX(0)";
+      msgEl.classList.remove("swiping");
+
+      setTimeout(()=>{
+        msgEl.style.transition = "";
+      },200);
+
+      // ===== TRIGGER REPLY (WALAUPUN SEDANG SELECT MODE) =====
+      if(isSwiping && diffX > REPLY_THRESHOLD && !longPressTriggered){
+        const text = msgEl.dataset.text || "";
+        const msgId = msgEl.dataset.id;
+
+        if(text && !msgEl.classList.contains('deleted')){
+          if(navigator.vibrate) navigator.vibrate(10);
+          showReplyPopup(text, msgId);
+        }
+      }
+
+      isSwiping = false;
+    });
+
+    // ===== DESKTOP SUPPORT (MOUSE) =====
+    msgEl.addEventListener('mousedown', () => {
+      longPressTimer = setTimeout(toggleSelect, LONG_PRESS_DELAY);
+    });
+
+    msgEl.addEventListener('mouseup', () => clearTimeout(longPressTimer));
+    msgEl.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+  });
+}
+
+// ===== RENDER MESSAGES =====
+function renderMessages(snapshot){
+  const chatContainer = document.getElementById("chatContainer");
+  chatContainer.innerHTML = "";
+
+  snapshot.forEach(doc=>{
+    const data = doc.data();
+
+    // ===== SKIP JIKA DIHAPUS HANYA UNTUK SAYA =====
+    if(data.deletedFor && data.deletedFor[currentUser.uid]){
+      return;
+    }
+
+    // ===== FORMAT WAKTU (ANTI ERROR) =====
+    const time = data.createdAt?.toDate?.().toLocaleTimeString(
+      "id-ID",
+      { hour: '2-digit', minute: '2-digit' }
+    ) || "";
+
+    // ===== ROW WRAPPER =====
+    const rowEl = document.createElement("div");
+    rowEl.classList.add("message-row");
+    rowEl.classList.add(data.senderId===currentUser.uid ? "user" : "partner");
+
+    // ===== BUBBLE =====
+    const msgEl = document.createElement("div");
+    msgEl.classList.add("message");
+    msgEl.classList.add(data.senderId===currentUser.uid ? "user" : "partner");
+    msgEl.dataset.id = doc.id;
+    msgEl.dataset.senderId = data.senderId;
+
+    // ===== JIKA DELETE FOR EVERYONE =====
+    if (data.deleted === true) {
+      msgEl.classList.add('deleted');
+
+      msgEl.innerHTML = `
+        <div class="swipe-reply-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <path d="M3 10h10a4 4 0 0 1 0 8H7" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 10l4-4M3 10l4 4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <div class="deleted-msg">
+          <svg class="deleted-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          <span>Pesan dihapus</span>
+        </div>
+
+        <div class="timestamp">${time}</div>
+      `;
+    } 
+    // ===== PESAN NORMAL =====
+    else {
+
+      // ===== REPLY PREVIEW (WA STYLE - LEBIH STABIL) =====
+      let replyHtml = "";
+      if(data.replyTo && data.replyTo.text){
+        replyHtml = `
+          <div class="reply-bubble">
+            <div class="reply-author">Membalas pesan</div>
+            <div class="reply-text-inline">
+              ${data.replyTo.text.replace(/\n/g,'<br>')}
+            </div>
+          </div>
+        `;
+      }
+
+      // ===== ISI PESAN + REPLY + TIMESTAMP =====
+      msgEl.innerHTML = `
+        <div class="swipe-reply-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <path d="M3 10h10a4 4 0 0 1 0 8H7" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 10l4-4M3 10l4 4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        ${replyHtml}
+
+        <div class="message-text">
+          ${data.text ? data.text.replace(/\n/g,'<br>') : ""}
+        </div>
+
+        <div class="timestamp">${time}</div>
+      `;
+    }
+
+    rowEl.appendChild(msgEl);
+    chatContainer.appendChild(rowEl);
+  });
+
+  // ===== AUTO SCROLL HANYA JIKA USER DI BAWAH =====
+  if (isUserNearBottom()) {
+    chatContainer.scrollTo({
+      top: chatContainer.scrollHeight,
+      behavior: 'smooth'
+    });
+  }
+
+  // ===== AKTIFKAN LONG PRESS LAGI =====
+  enableLongPressSelection();
+}
+// ===== FLOATING SCROLL BUTTON LOGIC =====
+const scrollBtn = document.getElementById("scrollToBottomBtn");
+const chatContainer = document.getElementById("chatContainer");
+
+// ===== CEK APAKAH USER DI BAWAH =====
+function isUserNearBottom() {
+  const threshold = 120; // jarak toleransi (px)
+  const position = chatContainer.scrollTop + chatContainer.clientHeight;
+  const height = chatContainer.scrollHeight;
+  return height - position < threshold;
+}
+
+// ===== AUTO SHOW / HIDE BUTTON SAAT SCROLL =====
+chatContainer.addEventListener("scroll", () => {
+  if (!chatContainer) return;
+
+  if (isUserNearBottom()) {
+    // Sembunyikan kalau sudah dekat bawah
+    scrollBtn.classList.remove("show");
+  } else {
+    // Muncul kalau scroll ke atas dikit saja
+    scrollBtn.classList.add("show");
+  }
+});
+
+// ===== KLIK BUTTON → SCROLL KE BAWAH (SMOOTH) =====
+scrollBtn.addEventListener("click", () => {
+  chatContainer.scrollTo({
+    top: chatContainer.scrollHeight,
+    behavior: "smooth"
+  });
+
+  // Vibrate kecil (premium UX)
+  if (navigator.vibrate) navigator.vibrate(8);
+});
+db.collection("chatRooms").doc(roomId)
+  .collection("messages")
+  .orderBy("createdAt")
+  .onSnapshot(snapshot => renderMessages(snapshot));
 
 // ===== KIRIM PESAN =====
 const input = document.getElementById("messageInput");
 document.getElementById("sendBtn").addEventListener("click", sendMessage);
 input.addEventListener("keydown", e => {
-  if(e.key === "Enter" && !e.ctrlKey){
-    // Enter biasa → bikin baris baru
-    // biarkan default, jadi auto tambah \n
-  } else if(e.key === "Enter" && e.ctrlKey){
-    e.preventDefault(); // Ctrl+Enter → kirim pesan
+  if(e.key === "Enter" && e.ctrlKey){
+    e.preventDefault();
     sendMessage();
   }
 });
 
-// ===== SEND MESSAGE FUNCTION =====
-function sendMessage(){
+// ===== SEND MESSAGE =====
+function sendMessage() {
   const text = input.value.trim();
-  if(!text) return;
+  if (!text) return;
+
+  const messageData = {
+    senderId: currentUser.uid,
+    text: text,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    deleted: false,
+    deletedFor: {}
+  };
+
+  // Jika sedang reply
+  if (replyState.active) {
+    messageData.replyTo = {
+      messageId: replyState.messageId,
+      text: replyState.text
+    };
+  }
+
+  // ===== SIMPAN KE FIRESTORE =====
   db.collection("chatRooms").doc(roomId)
-    .collection("messages").add({
-      senderId: currentUser.uid,
-      text: text,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  input.value="";
-  input.style.height="auto";
+    .collection("messages").add(messageData)
+    .then(docRef => {
+      // ===== SIMPAN KE CACHE LOCAL =====
+      saveMessageToCache({ ...messageData, id: docRef.id });
+    })
+    .catch(err => console.error("Gagal kirim pesan:", err));
+
+  input.value = "";
+  input.style.height = "auto";
+  cancelReply();
+  updateReplyPopupPosition();
+}
+
+// ===== FUNGSI SIMPAN CACHE =====
+function saveMessageToCache(message) {
+  let cachedMessages = localStorage.getItem("chat_" + roomId);
+  cachedMessages = cachedMessages ? JSON.parse(cachedMessages) : [];
+
+  cachedMessages.push({
+    id: message.id,
+    senderId: message.senderId,
+    text: message.text,
+    createdAt: Date.now(), // pakai timestamp lokal supaya bisa urut
+    deleted: message.deleted,
+    deletedFor: message.deletedFor,
+    replyTo: message.replyTo || null
+  });
+
+  localStorage.setItem("chat_" + roomId, JSON.stringify(cachedMessages));
 }
 
 // ===== AUTO RESIZE TEXTAREA =====
@@ -287,27 +1575,52 @@ input.addEventListener('input', ()=>{
   input.style.height='auto';
   input.style.height = input.scrollHeight+'px';
 });
+// ===== FIX: REPLY POPUP SELALU DI ATAS INPUT (WA STYLE) =====
+const inputContainer = document.querySelector('.input-container');
 
+function updateReplyPopupPosition() {
+  if (!inputContainer) return;
+  
+  const inputHeight = inputContainer.offsetHeight;
+  
+  // Geser reply popup setinggi input container
+  replyPopup.style.bottom = inputHeight + 'px';
+}
+
+// Update saat:
+// 1. textarea resize
+// 2. reply popup muncul
+// 3. window resize
+input.addEventListener('input', updateReplyPopupPosition);
+window.addEventListener('resize', updateReplyPopupPosition);
 // ===== EMOJI PICKER =====
-const picker = new EmojiButton({
-  position: 'top-start',  // posisi picker
-  zIndex: 9999            // pastikan di atas
+const emojiBtn = document.getElementById("emojiBtn");
+const emojiPopup = document.getElementById("emojiPopup");
+const emojis = ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭'];
+emojis.forEach(e=>{
+  const span = document.createElement('span');
+  span.style.cursor='pointer';
+  span.style.fontSize='20px';
+  span.textContent = e;
+  span.addEventListener('click', ()=>{
+    input.value += e;
+    input.focus();
+    input.dispatchEvent(new Event('input'));
+  });
+  emojiPopup.appendChild(span);
 });
 
-// Tombol emoji
-document.getElementById('emojiBtn').addEventListener('click', () => {
-  picker.togglePicker(document.getElementById('emojiBtn'));
+emojiBtn.addEventListener('click', e=>{
+  e.stopPropagation();
+  emojiPopup.classList.toggle('show');
 });
 
-// Saat pilih emoji
-picker.on('emoji', emoji => {
-  // tambahkan emoji ke textarea
-  input.value += emoji;
-  input.focus();
-
-  // trigger input event supaya auto resize jalan
-  input.dispatchEvent(new Event('input'));
+document.addEventListener('click', e=>{
+  if(!emojiPopup.contains(e.target) && !emojiBtn.contains(e.target)){
+    emojiPopup.classList.remove('show');
+  }
 });
 </script>
+
 </body>
 </html>

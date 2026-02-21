@@ -2,8 +2,11 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kurir - Tugas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FB923C">
+  <link rel="icon" href="ikon-512.png">
+<title>Tugas</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
@@ -514,52 +517,66 @@ async function loadOrders(tab){
           btnChat.style.marginLeft="8px";
           btnChat.innerText="Chat";
 
-        btnChat.addEventListener("click", async e=>{
-          e.stopPropagation();
-          const loading = document.getElementById("loadingPopup");
-          const loadingText = document.getElementById("loadingText");
-          loadingText.innerText = "Mengecek chat room...";
-          loading.classList.add("show");
-        
-          try{
-            // ===== CEK CHAT ROOM YANG SUDAH ADA =====
-            const existingRoomQuery = await db.collection("chatRooms")
-              .where(`participants.${currentUser.uid}`, "==", true)
-              .where(`participants.${data.userId}`, "==", true)
-              .limit(1)
-              .get();
-        
-            let roomRef;
-        
-            if(!existingRoomQuery.empty){
-              // Ada room, pakai room yang sudah ada
-              roomRef = existingRoomQuery.docs[0].ref;
-              loadingText.innerText = "Chat room sudah ada!";
-            } else {
-              // Tidak ada room, buat baru
-              roomRef = await db.collection("chatRooms").add({
-                participants: {
-                  [currentUser.uid]: true,
-                  [data.userId]: true
-                },
-                orderId: doc.id,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-              });
-              loadingText.innerText = "Chat room berhasil dibuat!";
-            }
-        
-            // Redirect ke halaman chat
-            setTimeout(()=>{
+            btnChat.addEventListener("click", async e => {
+            e.stopPropagation();
+            const loading = document.getElementById("loadingPopup");
+            const loadingText = document.getElementById("loadingText");
+            loadingText.innerText = "Mengecek chat room...";
+            loading.classList.add("show");
+          
+            try {
+              // ===== CEK CHAT ROOM YANG SUDAH ADA =====
+              const existingRoomQuery = await db.collection("chatRooms")
+                .where(`participants.${currentUser.uid}`, "==", true)
+                .where(`participants.${data.userId}`, "==", true)
+                .limit(1)
+                .get();
+          
+              let roomRef;
+          
+              // ===== AMBIL NAMA PARTNER =====
+              let partnerName = "User";
+              const userDoc = await db.collection("users").doc(data.userId).get();
+              if(userDoc.exists) partnerName = userDoc.data().nama || "User"; // field nama dari collection users
+          
+              // ===== AMBIL NAMA KURIR =====
+              let kurirName = "Kurir";
+              const kurirDoc = await db.collection("kurir").doc(currentUser.uid).get();
+              if(kurirDoc.exists) kurirName = kurirDoc.data().nama || "Kurir";
+          
+              if (!existingRoomQuery.empty) {
+                // Ada room, pakai yang sudah ada
+                roomRef = existingRoomQuery.docs[0].ref;
+                loadingText.innerText = "Chat room sudah ada!";
+              } else {
+                // Tidak ada room, buat baru + simpan nama partner & kurir
+                roomRef = await db.collection("chatRooms").add({
+                  participants: {
+                    [currentUser.uid]: true,
+                    [data.userId]: true
+                  },
+                  partnerInfo: {
+                    [data.userId]: { nama: partnerName },
+                    [currentUser.uid]: { nama: kurirName }
+                  },
+                  orderId: doc.id,
+                  createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                loadingText.innerText = "Chat room berhasil dibuat!";
+              }
+          
+              // Redirect ke halaman chat
+              setTimeout(() => {
+                loading.classList.remove("show");
+                window.location.href = `chat.html?roomId=${roomRef.id}`;
+              }, 1000);
+          
+            } catch (err) {
               loading.classList.remove("show");
-              window.location.href = `chat.html?roomId=${roomRef.id}`;
-            }, 1000);
-        
-          } catch(err){
-            loading.classList.remove("show");
-            alert("Gagal membuka chat room!");
-            console.error(err);
-          }
-        });
+              alert("Gagal membuka chat room!");
+              console.error(err);
+            }
+          });
           card.appendChild(btnChat);
         }
 
