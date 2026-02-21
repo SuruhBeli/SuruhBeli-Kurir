@@ -4,7 +4,7 @@
   "description": "Aplikasi laynan keluarga",
   "lang": "id-ID",
   "start_url": "index.html",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#FB923C",
   "theme_color": "#FB923C",
   "icons": [
