@@ -3,7 +3,7 @@
     apiKey: "AIzaSyByQl0BXZoSMzrULUNA6l7UVFQjXmvsdJE",
     authDomain: "suruhbeli-e8ae8.firebaseapp.com",
     projectId: "suruhbeli-e8ae8",
-    databaseURL: "https://suruhbeli-e8ae8-default-rtdb.firebaseio.com"
+    databaseURL: "https://suruhbeli-e8ae8-default-rtdb.asia-southeast1.firebasedatabase.app"
   });
 
   const db = firebase.firestore();
