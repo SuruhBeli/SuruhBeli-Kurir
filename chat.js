@@ -1004,15 +1004,3 @@ document.addEventListener('click', e=>{
     emojiPopup.classList.remove('show');
   }
 });
-window.addEventListener('DOMContentLoaded', () => {
-  // tampilkan body & container utama dengan animasi zoom
-  document.body.classList.add('show');
-  document.querySelector('.header').classList.add('show');
-  document.querySelector('.chat-container').classList.add('show');
-  document.querySelector('.input-container').classList.add('show');
-
-  // scroll otomatis ke bawah setelah animasi
-  setTimeout(() => {
-    scrollChatToBottom(true);
-  }, 400); // delay sesuai durasi animasi CSS
-});

@@ -45,20 +45,7 @@
     -webkit-tap-highlight-color: transparent;
     user-select: none;
   }
-  body, .chat-container, .header, .input-container {
-    opacity: 0;
-    transform: scale(0.95); /* mulai dari sedikit mengecil */
-    transition: opacity 0.4s ease, transform 0.4s ease;
-  }
-  
-  /* setelah JS trigger, elemen ini muncul */
-  body.show, 
-  .chat-container.show, 
-  .header.show, 
-  .input-container.show {
-    opacity: 1;
-    transform: scale(1); /* ukuran normal */
-  }
+ 
   /* HEADER */
   .header {
     position: fixed;
