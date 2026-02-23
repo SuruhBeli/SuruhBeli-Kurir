@@ -1,7 +1,7 @@
 {
-  "name": "SuruhBeli",
-  "short_name": "SuruhBeli",
-  "description": "Aplikasi laynan keluarga",
+  "name": "SB Mitra",
+  "short_name": "SB Mitra",
+  "description": "Aplikasi laynan keluarga khusus mitra",
   "lang": "id-ID",
   "start_url": "index.html",
   "display": "standalone",

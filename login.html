@@ -9,16 +9,82 @@
 <title>Kurir Login - SuruhBeli</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;font-family:'Nunito',sans-serif;}
-  body{display:flex;justify-content:center;align-items:center;height:100vh;background:#FFF7ED;color:#7C2D12;}
-  .card{background:#fff;border-radius:20px;padding:32px;max-width:400px;width:100%;box-shadow:0 10px 25px rgba(0,0,0,0.1);}
-  h1{text-align:center;margin-bottom:24px;font-weight:800;}
-  .form-group{margin-bottom:16px;display:flex;flex-direction:column;}
-  label{margin-bottom:6px;font-weight:700;}
-  input{padding:12px;border-radius:12px;border:1px solid #FED7AA;font-size:14px;}
-  .btn-login{width:100%;padding:14px;background:#FB923C;color:white;font-weight:800;border:none;border-radius:12px;font-size:16px;cursor:pointer;transition:0.2s;}
-  .btn-login:active{transform:scale(0.97);}
-  .alert{margin-top:12px;color:red;font-weight:700;text-align:center;display:none;}
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #FFF7ED;
+    color: #7C2D12;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 24px;
+    font-weight: 800;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  label {
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+
+  input {
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #FED7AA;
+    font-size: 14px;
+  }
+
+  .btn-login {
+    width: 100%;
+    padding: 14px;
+    background: #FB923C;
+    color: white;
+    font-weight: 800;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .btn-login:active {
+    transform: scale(0.97);
+  }
+
+  .alert {
+    margin-top: 12px;
+    color: red;
+    font-weight: 700;
+    text-align: center;
+    display: none;
+  }
 </style>
 </head>
 <body>

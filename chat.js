@@ -866,12 +866,12 @@ function autoScrollBottom(){
 
 // ===== TINGGI TEXTAREA===== //
 function adjustInputHeight() {
-  const lineHeight = 15; // tinggi 1 baris (sesuai min-height di CSS)
-  input.style.height = 'auto'; // reset
-  const scrollHeight = input.scrollHeight;
-
-  // Kalau scrollHeight <= lineHeight → tetap satu baris
-  input.style.height = Math.max(scrollHeight, lineHeight) + 'px';
+  const lineHeight = 15; // tinggi 1 baris
+  requestAnimationFrame(() => {
+    input.style.height = 'auto'; // reset
+    const scrollHeight = input.scrollHeight;
+    input.style.height = Math.max(scrollHeight, lineHeight) + 'px';
+  });
 }
 
 // ===== PADDING CHAT ===== //
@@ -890,6 +890,21 @@ function scrollChatToBottom(smooth = true) {
   } else {
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
+}
+function smoothScrollToBottom() {
+  const start = chatContainer.scrollTop;
+  const end = chatContainer.scrollHeight;
+  const distance = end - start;
+  const duration = 300; // ms
+  let startTime = null;
+
+  function animation(time) {
+    if (!startTime) startTime = time;
+    const progress = Math.min((time - startTime) / duration, 1);
+    chatContainer.scrollTop = start + distance * progress;
+    if (progress < 1) requestAnimationFrame(animation);
+  }
+  requestAnimationFrame(animation);
 }
 
 // ===== INPUTBOX AUTO RADIUS ===== //
@@ -915,7 +930,7 @@ function adjustInputRadius() {
   }
 
   // Semakin tinggi textarea, radius atas makin mengecil
-  let topRadius = baseRadius - (lines * 10);
+  let topRadius = baseRadius - (lines * 8);
 
   if (topRadius < minTopRadius) {
     topRadius = minTopRadius;
@@ -988,4 +1003,16 @@ document.addEventListener('click', e=>{
   if(!emojiPopup.contains(e.target) && !emojiBtn.contains(e.target)){
     emojiPopup.classList.remove('show');
   }
+});
+window.addEventListener('DOMContentLoaded', () => {
+  // tampilkan body & container utama dengan animasi zoom
+  document.body.classList.add('show');
+  document.querySelector('.header').classList.add('show');
+  document.querySelector('.chat-container').classList.add('show');
+  document.querySelector('.input-container').classList.add('show');
+
+  // scroll otomatis ke bawah setelah animasi
+  setTimeout(() => {
+    scrollChatToBottom(true);
+  }, 400); // delay sesuai durasi animasi CSS
 });

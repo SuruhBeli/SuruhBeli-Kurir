@@ -33,22 +33,32 @@
   --font-3: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-main: var(--font-inter);
 }
-:root {
-  --header-height: 64px;
-  --input-height: 90px; /* tinggi aman untuk textarea + reply + button */
-}
+
   body {
     font-family: 'Helvetica', 'Arial', sans-serif; /* default font mirip WhatsApp */
     margin: 0;
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background: var(--body-bg);
+    background: var(--black);
     overflow: hidden;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
   }
-
+  body, .chat-container, .header, .input-container {
+    opacity: 0;
+    transform: scale(0.95); /* mulai dari sedikit mengecil */
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  
+  /* setelah JS trigger, elemen ini muncul */
+  body.show, 
+  .chat-container.show, 
+  .header.show, 
+  .input-container.show {
+    opacity: 1;
+    transform: scale(1); /* ukuran normal */
+  }
   /* HEADER */
   .header {
     position: fixed;
@@ -105,13 +115,10 @@
 
   /* ===== CHAT CONTAINER ===== */
   .chat-container {
-    margin-top: 64px;
-    margin-bottom: 0;
     flex: 1;
     position: relative;
-    height: calc(100vh - 64px);
     overflow-y: auto;
-    padding: 12px 10px 140px 10px;
+    padding: 80px 10px 80px 10px;
     display: flex;
     background-image: url("pattern1.jpg");
     background-repeat: repeat;
@@ -126,6 +133,18 @@
     display: flex;
     position: relative;
     touch-action: pan-y; /* biar scroll smooth */
+  }
+  .message-row.new {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeSlideIn 0.3s forwards cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  
+  @keyframes fadeSlideIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   .message-row.user {
     justify-content: flex-end;
@@ -146,6 +165,9 @@
     font-family: var(--font-2);
     font-size: 16px;
     line-height: 1.4;
+    transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              opacity 0.25s ease, 
+              background 0.25s ease;
   }
   /* layout message */
   .message-text {
@@ -266,6 +288,8 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              opacity 0.25s ease;
   }
   .delete-title {
     font-size: 14px;
@@ -342,7 +366,7 @@
     font-family: var(--font-1);
   }
 
-   /* ===== INPUT CONTAINER & REPLY TEXT ===== */
+   /* ===== INPUT CONTAINER ===== */
   .input-container {
     position: fixed;
     bottom: 0;
@@ -368,7 +392,8 @@
     border-radius: 30px;
     padding: 0px;
     box-shadow: 0 2px 8px var(--shadow-soft);
-    transition: border-radius 0.15s ease, height 0.2s ease;
+    transition: border-radius 0.25s cubic-bezier(0.25, 0.8, 0.25, 1),
+              height 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
     align-items: stretch;
   }
   /* BARIS DALAM (EMOJI + TEXTAREA) */
@@ -391,6 +416,7 @@
     overflow-y: auto;
     line-height: 15px;  /* harus sinkron JS */
     padding: 0;
+    transition: height 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
   .emoji-btn {
     width: 38px;
@@ -454,7 +480,8 @@
     opacity: 0;
     pointer-events: none;
     transform-origin: bottom left;
-    transition: transform 0.2s ease, opacity 0.2s ease;
+    transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              opacity 0.25s ease;
   }
   #emojiPopup.show {
     transform: scale(1);
@@ -466,21 +493,20 @@
   .reply-inline {
     /* 🔥 JANGAN pakai width 100% mentah */
     width: calc(100% - 20px); /* 10px kiri + 10px kanan */
-    margin: 4px 10px 0 10px;  /* sejajar dengan padding input-inner */
-  
+    margin: 4px 0px 0 4px;/* sejajar dengan padding input-inner */
     background: var(--secondary-color);
     border-radius: 10px;
     padding: 2px; /* kecil saja karena ada card di dalam */
-  
     display: flex;
     align-items: center;
-  
-    /* animasi */
     max-height: 0;
     opacity: 0;
     overflow: hidden;
     transform: translateY(8px);
     transition: all 0.25s ease;
+    transition: max-height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+              opacity 0.25s ease,
+              transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
   .reply-inline.show {
     max-height: 80px;
@@ -533,6 +559,8 @@
     opacity: 0;
     transition: transform 0.15s ease, opacity 0.15s ease;
     pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+              opacity 0.3s ease;
   }
   .message.swiping .swipe-reply-icon {
     opacity: 1;
@@ -629,7 +657,7 @@
     z-index: 50;
     gap: 8px;
     transform: translateY(-100%);
-    transition: transform 0.2s ease;
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
   .selection-popup.show {
     transform: translateY(0);
@@ -676,6 +704,7 @@
     pointer-events: none;
     transition: all 0.25s ease;
     box-shadow: 0 8px 20px var(--shadow-soft);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
   .scroll-bottom-btn.show {
     opacity: 1;
